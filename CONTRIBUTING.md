@@ -51,7 +51,7 @@ We use `size-limit` to guard bundle size. Check with:
 npm run size
 ```
 
-Target: core ≤ 5KB gzipped, full ≤ 6KB gzipped.
+Target: core ≤ 5KB gzipped, audio ≤ 6KB gzipped, full ≤ 12KB gzipped.
 
 ## Reporting Issues
 
@@ -59,6 +59,14 @@ Please open an issue on [GitHub](https://github.com/AppsYogi-com/morsecodeapp/is
 - Steps to reproduce
 - Expected vs actual behavior
 - Your environment (Node version, browser, bundler)
+
+## Adding Audio Features
+
+1. Add source files under `src/audio/`
+2. Export new types/functions from `src/audio/index.ts`
+3. Add tests under `test/audio/` — use `vi.fn()` to mock the Web Audio API for player tests
+4. Run `npm run size` to verify the audio bundle stays within the 6KB limit
+5. Update `API.md` with full documentation for new exports
 
 ## License
 
