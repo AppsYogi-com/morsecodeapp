@@ -4,14 +4,14 @@
 
 **The most complete Morse code library for JavaScript and TypeScript.**
 
-Encode, decode, validate, and analyze — with 11 character sets, prosigns, PARIS timing, and Farnsworth spacing. Zero dependencies.
+Encode, decode, play, and export — with 11 character sets, audio playback, WAV export, prosigns, PARIS timing, and Farnsworth spacing. Zero dependencies.
 
 [![npm version](https://img.shields.io/npm/v/@morsecodeapp/morse.svg)](https://www.npmjs.com/package/@morsecodeapp/morse)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/@morsecodeapp/morse)](https://bundlephobia.com/package/@morsecodeapp/morse)
 [![tests](https://img.shields.io/github/actions/workflow/status/AppsYogi-com/morsecodeapp/ci.yml?label=tests)](https://github.com/AppsYogi-com/morsecodeapp/actions)
 [![license](https://img.shields.io/npm/l/@morsecodeapp/morse.svg)](./LICENSE)
 
-[Install](#install) · [Quick Start](#quick-start) · [API Reference](API.md) · [Report Bug](https://github.com/AppsYogi-com/morsecodeapp/issues)
+[Install](#install) · [Quick Start](#quick-start) · [Audio](#audio-playback) · [API Reference](API.md) · [Report Bug](https://github.com/AppsYogi-com/morsecodeapp/issues)
 
 </div>
 
@@ -22,6 +22,10 @@ Encode, decode, validate, and analyze — with 11 character sets, prosigns, PARI
 |  | @morsecodeapp/morse | morse-code-translator | morsify |
 |--|:---:|:---:|:---:|
 | Character sets | **11** | 12 | 1 |
+| Audio playback (Web Audio) | **Yes** | — | Partial |
+| WAV export | **Yes** | — | — |
+| Sound presets | **6** | — | — |
+| Gain envelope (click-free) | **Yes** | — | — |
 | Prosigns (SOS, AR, SK…) | **10** | — | — |
 | Farnsworth timing | **Yes** | — | — |
 | PARIS timing calculator | **Yes** | — | — |
@@ -62,12 +66,15 @@ Three lines. That's it.
 ## Features
 
 - **11 character sets** — ITU, American, Latin Extended, Cyrillic, Greek, Hebrew, Arabic, Persian, Japanese (Wabun), Korean (SKATS), Thai
+- **Audio playback** — Web Audio API player with play/pause/stop, gain envelope, event callbacks
+- **WAV export** — 44.1 kHz 16-bit PCM, works in any JS runtime
+- **6 sound presets** — telegraph, radio, military, sonar, naval, beginner
 - **10 prosigns** — SOS, AR, SK, BT, KN, AS, CL, CT, SN, HH
 - **PARIS timing** — standard and Farnsworth spacing, duration estimates
 - **Validation** — check morse syntax, encodability, find unsupported characters
 - **Statistics** — dots, dashes, signal count, duration in ms/sec
 - **Zero dependencies** — nothing but your code
-- **Tree-shakeable** — import from `@morsecodeapp/morse/core` for minimal bundle
+- **Tree-shakeable** — import from `@morsecodeapp/morse/core` or `@morsecodeapp/morse/audio`
 - **TypeScript-first** — strict types, full `.d.ts`, zero `any`
 - **ESM + CJS** — works in Node.js, Bun, Deno, and browsers (via bundler)
 - **Roundtrip safe** — `decode(encode(text)) === text` for all supported characters
@@ -149,15 +156,69 @@ listCharsets();          // ['itu', 'american', 'latin-ext', 'cyrillic', ...]
 
 ---
 
-## Tree Shaking
+## Audio Playback
 
-For minimal bundle size, import from the `/core` sub-path:
+### Play Morse audio in the browser
 
 ```ts
-import { encode, decode } from '@morsecodeapp/morse/core';
+import { MorsePlayer } from '@morsecodeapp/morse/audio';
+
+const player = new MorsePlayer({ wpm: 20, frequency: 600 });
+
+await player.play('Hello World');
 ```
 
-Both paths export the same API. The `/core` entry point is optimized for bundlers that benefit from explicit sub-path imports.
+### Use a sound preset
+
+```ts
+import { MorsePlayer, presets } from '@morsecodeapp/morse/audio';
+
+const player = new MorsePlayer(presets.telegraph);
+await player.play('CQ CQ CQ');
+```
+
+### Export to WAV
+
+```ts
+import { toWav, downloadWav } from '@morsecodeapp/morse/audio';
+
+// Raw WAV bytes (works in Node.js, Bun, Deno, browsers)
+const wavBytes = toWav('SOS', { frequency: 800 });
+
+// One-click download in the browser
+downloadWav('SOS', { filename: 'sos.wav' });
+```
+
+### Event callbacks
+
+```ts
+const player = new MorsePlayer({
+  wpm: 15,
+  onSignal: (signal, idx) => console.log(signal), // 'dot' | 'dash'
+  onCharacter: (char, morse, idx) => console.log(char, morse),
+  onProgress: (current, total) => console.log(`${current}/${total} ms`),
+});
+
+await player.play('SOS');
+```
+
+> Available presets: `telegraph`, `radio`, `military`, `sonar`, `naval`, `beginner`
+
+---
+
+## Tree Shaking
+
+For minimal bundle size, import from sub-paths:
+
+```ts
+// Core only — encode, decode, charsets, timing, validation
+import { encode, decode } from '@morsecodeapp/morse/core';
+
+// Audio only — player, WAV export, presets
+import { MorsePlayer, toWav } from '@morsecodeapp/morse/audio';
+```
+
+Each sub-path is independently tree-shakeable. The root `@morsecodeapp/morse` re-exports everything.
 
 ---
 
@@ -191,14 +252,16 @@ Both paths export the same API. The `/core` entry point is optimized for bundler
 - [x] ESM + CJS, TypeScript-first, zero dependencies
 - [x] 99%+ test coverage
 
-### Phase 2 — Audio 🔊 `v0.2.0` ← up next
+### Phase 2 — Audio 🔊 `v0.2.0` ✅
 > Hear your Morse code.
 
-- [ ] `MorsePlayer` class — Web Audio API playback with play/pause/stop
-- [ ] WAV export (44.1kHz, 16-bit PCM)
-- [ ] Sound presets — telegraph, radio, military, crystal
-- [ ] Gain envelope — clean start/stop, no audio clicks
-- [ ] Configurable frequency, WPM, and volume
+- [x] `MorsePlayer` class — Web Audio API playback with play/pause/stop
+- [x] WAV export (44.1 kHz, 16-bit PCM)
+- [x] 6 sound presets — telegraph, radio, military, sonar, naval, beginner
+- [x] Gain envelope — clean start/stop, no audio clicks
+- [x] Configurable frequency, WPM, volume, and waveform
+- [x] Event callbacks — onSignal, onCharacter, onProgress, and more
+- [x] Scheduler — timed tone/silence events for custom rendering
 
 ### Phase 3 — Visual + Tap 📱 `v0.3.0`
 > See it. Tap it.
